@@ -6,7 +6,25 @@ This is a simple docker compose project to create a mirror of the docker hub reg
 
 This mirror is available under the domain `mirror.docker.yurzs.dev`
 
+### To use this mirror
+
+1. Add the following to your `/etc/docker/daemon.json`:
+
+```json
+{
+  "registry-mirrors": ["https://mirror.docker.yurzs.dev"]
+}
+```
+
+### To login to the mirror
+
+```bash
+docker login mirror.docker.yurzs.dev
+```
+
 ## Usage
+
+You can spin up your own mirror by following these steps:
 
 1. Clone the repository
 2. Acquire certificate for your mirror domain using `certbot`.
