@@ -5,6 +5,7 @@ name: mirror-docker
 services:
   haproxy:
     container_name: mirror-docker-haproxy
+    restart: on-failure
     image: haproxy:latest
     user: root
     ports:
