@@ -13,13 +13,7 @@ combine-certs:
 	@docker compose exec certbot cat \
 		/etc/letsencrypt/live/$(MIRROR_DOMAIN)/fullchain.pem \
 		/etc/letsencrypt/live/$(MIRROR_DOMAIN)/privkey.pem > \
-		/etc/letsencrypt/live/$(MIRROR_DOMAIN)/haproxy.crt
-
-	@echo "Combining auth cert"
-	@docker compose exec certbot cat \
-		/etc/letsencrypt/live/auth.$(MIRROR_DOMAIN)/fullchain.pem \
-		/etc/letsencrypt/live/auth.$(MIRROR_DOMAIN)/privkey.pem > \
-		/etc/letsencrypt/live/auth.$(MIRROR_DOMAIN)/haproxy.crt
+		/etc/letsencrypt/live/$(MIRROR_DOMAIN)/haproxy.pem
 
 	@echo "Done!"
 
