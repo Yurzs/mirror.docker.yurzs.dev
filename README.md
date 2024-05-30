@@ -2,6 +2,10 @@
 
 This is a simple docker compose project to create a mirror of the docker hub registry. 
 
+## This registry mirror
+
+This mirror is available under the domain `mirror.docker.yurzs.dev`
+
 ## Usage
 
 1. Clone the repository
