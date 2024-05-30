@@ -16,7 +16,7 @@ This mirror is available under the domain `mirror.docker.yurzs.dev`
 }
 ```
 
-### To login to the mirror
+### To log in to the mirror
 
 ```bash
 docker login mirror.docker.yurzs.dev
@@ -26,12 +26,20 @@ docker login mirror.docker.yurzs.dev
 
 You can spin up your own mirror by following these steps:
 
-1. Clone the repository
-2. Acquire certificate for your mirror domain using `certbot`.
-3. Set `MIRROR_DOMAIN` env variable to your mirror domain. (Or pass it to section 4)
-4. Call `docker compose up -d` to start the mirror.
+### Pre-requisites:
+- Docker
+- DNS records pointing to your server (`auth.<MIRROR_DOMAIN>` and `<MIRROR_DOMAIN>`)
+- `80` and `443` ports open on your server
 
-## Configuration
+### Quickstart
+
+1. Clone repository `git clone git clone https://github.com/Yurzs/mirror.docker.yurzs.dev.git`
+2. Change directory `cd mirror.docker.yurzs.dev`
+3. Run `make quickstart MIRROR_DOMAIN=<MIRROR_DOMAIN> EMAIL=<EMAIL>`
+
+Where `<MIRROR_DOMAIN>` is the domain you want to use for the mirror and `<EMAIL>` is the email you want to use for the SSL certificate.
+
+## Client Configuration
 
 To configure docker to use this proxy you can add the following to your `/etc/docker/daemon.json`:
 
