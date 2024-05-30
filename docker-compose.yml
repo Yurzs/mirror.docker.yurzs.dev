@@ -1,0 +1,24 @@
+---
+
+name: mirror-docker
+
+services:
+  haproxy:
+    container_name: mirror-docker-haproxy
+    image: haproxy:latest
+    user: root
+    ports:
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    environment:
+      MIRROR_DOMAIN: ${MIRROR_DOMAIN}
+  certbot:
+    container_name: mirror-docker-certbot
+    image: certbot/certbot:latest
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+    ports:
+      - "80:80"
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
