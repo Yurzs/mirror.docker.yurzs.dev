@@ -23,8 +23,7 @@ generate-certs: start-certbot
 
 	@echo "Generating certs"
 	@docker compose exec certbot certbot certonly --standalone \
-		-d $(MIRROR_DOMAIN),auth.$(MIRROR_DOMAIN) --email $(EMAIL) \
-		--agree-tos --no-eff-email
+		-d $(MIRROR_DOMAIN) --email $(EMAIL) --agree-tos --no-eff-email
 
 	@make -s combine-certs
 	@make -s stop-certbot
