@@ -28,7 +28,7 @@ You can spin up your own mirror by following these steps:
 
 ### Pre-requisites:
 - Docker
-- DNS records pointing to your server (`auth.<MIRROR_DOMAIN>` and `<MIRROR_DOMAIN>`)
+- DNS records pointing to your server (`<MIRROR_DOMAIN>`)
 - `80` and `443` ports open on your server
 
 ### Quickstart
