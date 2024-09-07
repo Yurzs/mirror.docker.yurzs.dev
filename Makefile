@@ -9,11 +9,14 @@ stop-certbot:
 combine-certs:
 	@test -n "$(MIRROR_DOMAIN)" || (echo "MIRROR_DOMAIN is not set" && exit 1)
 
+	@echo "Starting haproxy"
+	@docker compose up -d haproxy
+
 	@echo "Combining registry cert"
-	@docker compose exec certbot cat \
-		/etc/letsencrypt/live/$(MIRROR_DOMAIN)/fullchain.pem \
-		/etc/letsencrypt/live/$(MIRROR_DOMAIN)/privkey.pem > \
-		/etc/letsencrypt/live/$(MIRROR_DOMAIN)/haproxy.pem
+	@docker compose exec certbot /etc/letsencrypt/renewal-hooks/post/haproxy
+
+	@echo "Stopping haproxy"
+	@docker compose stop haproxy
 
 	@echo "Done!"
 
