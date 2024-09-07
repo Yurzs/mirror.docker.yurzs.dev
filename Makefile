@@ -15,9 +15,6 @@ combine-certs:
 	@echo "Combining registry cert"
 	@docker compose exec certbot /etc/letsencrypt/renewal-hooks/post/haproxy
 
-	@echo "Stopping haproxy"
-	@docker compose stop haproxy certbot
-
 	@echo "Done!"
 
 generate-certs: start-certbot
