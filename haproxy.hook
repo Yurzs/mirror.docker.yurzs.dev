@@ -1,0 +1,12 @@
+#!/bin/sh
+
+cat /etc/letsencrypt/live/"$MIRROR_DOMAIN"/fullchain.pem > /etc/letsencrypt/live/"$MIRROR_DOMAIN"/haproxy.pem
+cat /etc/letsencrypt/live/"$MIRROR_DOMAIN"/privkey.pem >> /etc/letsencrypt/live/"$MIRROR_DOMAIN"/haproxy.pem
+
+echo "ssl file for haproxy updated"
+
+apk add socat
+
+echo "reload" | socat stdio tcp4-connect:haproxy:9999
+
+echo "reloaded haproxy"
