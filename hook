@@ -71,7 +71,7 @@ def main() -> None:
 
     haproxy = HaproxyClient()
 
-    cert_name = f"{HAPROXY_CERTS_PATH}/{MIRROR_DOMAIN}_{int(time.time())}"
+    cert_name = f"{HAPROXY_CERTS_PATH}/{MIRROR_DOMAIN}_{int(time.time())}.pem"
     combined_cert = combine_certs(MIRROR_DOMAIN)
 
     haproxy.add_cert(cert_name, combined_cert)

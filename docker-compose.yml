@@ -23,10 +23,6 @@ services:
 
         ADD haproxy.cfg /usr/local/etc/haproxy/haproxy.cfg
 
-        RUN mkdir -p /etc/haproxy/certbot
-        RUN chown -R haproxy:haproxy /etc/haproxy/certbot
-        RUN chown -R haproxy:haproxy /usr/local/etc/haproxy/haproxy.crt.list
-
         USER haproxy
 
     container_name: ${COMPOSE_PROJECT_NAME}-haproxy
@@ -35,7 +31,7 @@ services:
     ports:
       - "443:443"
     volumes:
-      - certbot_certs:/etc/haproxy/certbot
+      - haproxy_sate:/var/lib/haproxy/server-state
     environment:
       <<: *common-envs
   certbot:
@@ -51,4 +47,4 @@ services:
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 volumes:
-  certbot_certs: {}
+  haproxy_state: {}
