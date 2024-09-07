@@ -20,7 +20,7 @@ services:
       - ./haproxy_certs:/usr/local/etc/haproxy/certs
       - ./haproxy.crt.list:/usr/local/etc/haproxy/haproxy.crt.list
       - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-      - ./haproxy.pem:/usr/local/etc/haproxy/certs/haproxy.pem:ro
+      - ./haproxy.pem:/usr/local/etc/haproxy/certs/dummy/haproxy.pem:ro
     environment:
       <<: *common-envs
   certbot:
