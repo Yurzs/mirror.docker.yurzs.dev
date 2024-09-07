@@ -10,13 +10,13 @@ combine-certs:
 	@test -n "$(MIRROR_DOMAIN)" || (echo "MIRROR_DOMAIN is not set" && exit 1)
 
 	@echo "Starting haproxy"
-	@docker compose up -d haproxy
+	@docker compose up -d haproxy certbot
 
 	@echo "Combining registry cert"
 	@docker compose exec certbot /etc/letsencrypt/renewal-hooks/post/haproxy
 
 	@echo "Stopping haproxy"
-	@docker compose stop haproxy
+	@docker compose stop haproxy certbot
 
 	@echo "Done!"
 
