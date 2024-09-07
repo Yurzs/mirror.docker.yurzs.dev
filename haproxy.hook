@@ -1,12 +1,33 @@
 #!/bin/sh
 
-cat /etc/letsencrypt/live/"$MIRROR_DOMAIN"/fullchain.pem > /etc/letsencrypt/live/"$MIRROR_DOMAIN"/haproxy.pem
-cat /etc/letsencrypt/live/"$MIRROR_DOMAIN"/privkey.pem >> /etc/letsencrypt/live/"$MIRROR_DOMAIN"/haproxy.pem
-
-echo "ssl file for haproxy updated"
-
 apk add socat
 
-echo "reload" | socat stdio tcp4-connect:haproxy:9999
+HAPROXY="socat stdio tcp4-connect:haproxy:9999"
+CERT_FOLDER="/etc/letsencrypt/live/$MIRROR_DOMAIN"
+NEW_CERT="$MIRROR_DOMAIN-$(date +"%Y%m%d%H%M").pem"
+CRT_LIST="/usr/local/etc/haproxy/haproxy.crt.list"
 
-echo "reloaded haproxy"
+cat "$CERT_FOLDER"/fullchain.pem > haproxy.pem
+cat "$CERT_FOLDER"/privkey.pem >> haproxy.pem
+
+echo "ssl file for haproxy generated"
+
+echo "new ssl cert $NEW_CERT" | $HAPROXY
+echo -e "set ssl cert $NEW_CERT <<\n$(cat haproxy.pem)" | $HAPROXY
+echo "commit ssl cert $NEW_CERT" | $HAPROXY
+
+echo "add ssl crt-list $CRT_LIST <<\n$NEW_CERT [alpn h2] $MIRROR_DOMAIN\n" | $HAPROXY
+
+for CERT in $(echo "show ssl cert" | $HAPROXY)
+do
+  if [[ "$CERT" == "$MIRROR_DOMAIN*" ]]
+  then
+    if [[ "$CERT" != "$NEW_CERT" ]]
+    then
+      echo "del ssl crt-list $CRT_LIST $CERT" | $HAPROXY
+      echo "del ssl cert $CERT" | $HAPROXY
+    fi
+  fi
+done
+
+echo "cert file updated; haproxy reloaded"

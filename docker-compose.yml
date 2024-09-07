@@ -11,7 +11,7 @@ services:
     ports:
       - "443:443"
     volumes:
-      - /etc/letsencrypt:/etc/letsencrypt
+      - ./haproxy.crt.list:/usr/local/etc/haproxy/haproxy.crt.list
       - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     environment:
       MIRROR_DOMAIN: ${MIRROR_DOMAIN}
@@ -23,4 +23,6 @@ services:
       - ./haproxy.hook:/etc/letsencrypt/renewal-hooks/post/haproxy:ro
     ports:
       - "80:80"
+    environment:
+      MIRROR_DOMAIN: ${MIRROR_DOMAIN}
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
