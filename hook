@@ -8,7 +8,6 @@ from typing import List
 
 MIRROR_DOMAIN  = os.environ["MIRROR_DOMAIN"]
 HAPROXY_CRT_LIST = os.environ["HAPROXY_CRT_LIST"]
-HAPROXY_CERTS_PATH = os.environ["HAPROXY_CERTS_PATH"]
 HAPROXY_ADMIN_PORT = os.environ.get("HAPROXY_ADMIN_PORT", 9999)
 
 
@@ -71,14 +70,20 @@ def main() -> None:
 
     haproxy = HaproxyClient()
 
-    cert_name = f"{HAPROXY_CERTS_PATH}/{MIRROR_DOMAIN}_{int(time.time())}.pem"
+    cert_name = f"{MIRROR_DOMAIN}_{int(time.time())}.pem"
     combined_cert = combine_certs(MIRROR_DOMAIN)
+
+    with open(f"/etc/letsencrypt/live/{MIRROR_DOMAIN}/haproxy.pem", "w") as f:
+        f.write(combined_cert)
 
     haproxy.add_cert(cert_name, combined_cert)
     haproxy.add_cert_to_list(HAPROXY_CRT_LIST, cert_name, MIRROR_DOMAIN)
 
+    with open(HAPROXY_CRT_LIST, "w") as f:
+        f.write(f"/etc/letsencrypt/live/{MIRROR_DOMAIN}/haproxy.pem")
+
     for cert in haproxy.get_certs():
-        if cert.startswith(f"{HAPROXY_CERTS_PATH}/{MIRROR_DOMAIN}") and cert != cert_name:
+        if cert.startswith(f"{MIRROR_DOMAIN}") and cert != cert_name:
             haproxy.del_cert_from_list(HAPROXY_CRT_LIST, cert)
             haproxy.del_cert(cert)
 

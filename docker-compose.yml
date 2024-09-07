@@ -5,33 +5,22 @@ name: mirror-docker
 
 x-common-envs: &common-envs
   MIRROR_DOMAIN: ${MIRROR_DOMAIN}
-  HAPROXY_CERTS_PATH: /etc/haproxy/certbot
   HAPROXY_ADMIN_PORT: 9999
-  HAPROXY_CRT_LIST: /usr/local/etc/haproxy/haproxy.crt.list
+  HAPROXY_CRT_LIST: /etc/letsencrypt/haproxy.crt.list
 
 services:
   haproxy:
-    build:
-      context: .
-      dockerfile_inline: |
-        FROM haproxy:latest
-
-        USER root
-
-        ADD haproxy.pem /etc/haproxy/certs/haproxy.pem
-        RUN echo "/etc/haproxy/certs/haproxy.pem" > /usr/local/etc/haproxy/haproxy.crt.list
-
-        ADD haproxy.cfg /usr/local/etc/haproxy/haproxy.cfg
-
-        USER haproxy
-
+    image: haproxy:latest
     container_name: ${COMPOSE_PROJECT_NAME}-haproxy
     restart: on-failure
     user: root
     ports:
       - "443:443"
     volumes:
-      - haproxy_state:/var/lib/haproxy/server-state
+      - /etc/letsencrypt:/etc/letsencrypt
+      - ./haproxy.pem:/etc/letsencrypt/live/dummy.pem:ro
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./haproxy.crt.list:/usr/local/etc/haproxy/haproxy.crt.list:ro
     environment:
       <<: *common-envs
   certbot:
@@ -40,11 +29,9 @@ services:
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt
       - ./hook:/etc/letsencrypt/renewal-hooks/post/haproxy:ro
+      - ./haproxy.crt.list:/etc/letsencrypt/haproxy.crt.list
     ports:
       - "80:80"
     environment:
       <<: *common-envs
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-
-volumes:
-  haproxy_state: {}
