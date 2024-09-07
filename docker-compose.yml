@@ -2,6 +2,9 @@
 
 name: mirror-docker
 
+x-common-envs: &common-envs
+  MIRROR_DOMAIN: ${MIRROR_DOMAIN}
+
 services:
   haproxy:
     container_name: mirror-docker-haproxy
@@ -11,10 +14,11 @@ services:
     ports:
       - "443:443"
     volumes:
+      - ./haproxy_certs:/usr/local/etc/haproxy/certs
       - ./haproxy.crt.list:/usr/local/etc/haproxy/haproxy.crt.list
       - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     environment:
-      MIRROR_DOMAIN: ${MIRROR_DOMAIN}
+      <<: *common-envs
   certbot:
     container_name: mirror-docker-certbot
     image: certbot/certbot:latest
@@ -24,5 +28,5 @@ services:
     ports:
       - "80:80"
     environment:
-      MIRROR_DOMAIN: ${MIRROR_DOMAIN}
+      <<: *common-envs
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
