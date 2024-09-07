@@ -31,7 +31,7 @@ services:
     ports:
       - "443:443"
     volumes:
-      - haproxy_sate:/var/lib/haproxy/server-state
+      - haproxy_state:/var/lib/haproxy/server-state
     environment:
       <<: *common-envs
   certbot:
