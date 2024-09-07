@@ -4,6 +4,9 @@ name: mirror-docker
 
 x-common-envs: &common-envs
   MIRROR_DOMAIN: ${MIRROR_DOMAIN}
+  HAPROXY_CERTS_PATH: /usr/local/etc/haproxy/certs
+  HAPROXY_ADMIN_PORT: 9999
+  HAPROXY_CRT_LIST: /usr/local/etc/haproxy/haproxy.crt.list
 
 services:
   haproxy:
@@ -17,6 +20,7 @@ services:
       - ./haproxy_certs:/usr/local/etc/haproxy/certs
       - ./haproxy.crt.list:/usr/local/etc/haproxy/haproxy.crt.list
       - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./haproxy.pem:/usr/local/etc/haproxy/certs/haproxy.pem:ro
     environment:
       <<: *common-envs
   certbot:
@@ -24,7 +28,7 @@ services:
     image: certbot/certbot:latest
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt
-      - ./haproxy.hook:/etc/letsencrypt/renewal-hooks/post/haproxy:ro
+      - ./hook:/etc/letsencrypt/renewal-hooks/post/haproxy:ro
     ports:
       - "80:80"
     environment:

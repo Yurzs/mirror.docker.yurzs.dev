@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+import os
+import socket
+import time
+from contextlib import contextmanager
+from typing import List
+
+
+MIRROR_DOMAIN  = os.environ["MIRROR_DOMAIN"]
+HAPROXY_CRT_LIST = os.environ["HAPROXY_CRT_LIST"]
+HAPROXY_CERTS_PATH = os.environ["HAPROXY_CERTS_PATH"]
+HAPROXY_ADMIN_PORT = os.environ.get("HAPROXY_ADMIN_PORT", 9999)
+
+
+class HaproxyClient:
+    @contextmanager
+    def connection(self):
+        s = socket.create_connection(("haproxy", HAPROXY_ADMIN_PORT))
+
+        try:
+            yield s
+        finally:
+            s.close()
+
+    def send(self, request: str) -> List[str]:
+        with self.connection() as conn:
+            conn.sendall(f"{request}\n".encode())
+            return conn.recv(1024).decode().strip().split("\n")
+
+    def get_certs(self):
+        return self.send("show ssl cert")[1:]
+
+    def add_cert(self, cert_path: str, cert: str):
+        """Add a new cert to haproxy."""
+
+        print(self.send(f"new ssl cert {cert_path}"))
+        print(self.send(f"set ssl cert {cert_path} <<\n{cert}"))
+        print(self.send(f"commit ssl cert {cert_path}"))
+
+    def add_cert_to_list(self, list_name: str, cert_path: str, domain: str):
+        """Add a cert to a list."""
+
+        self.send(
+            f"add ssl crt-list {list_name} <<\n{cert_path} [alpn h2] {domain}\n"
+        )
+
+    def del_cert_from_list(self, list_name: str, cert_path: str):
+        """Delete a cert from a list."""
+
+        self.send(f"del ssl crt-list {list_name} {cert_path}")
+
+    def del_cert(self, name: str):
+        """Delete a cert from haproxy."""
+
+        self.send(f"del ssl cert {name}")
+
+
+def combine_certs(domain_name: str) -> str:
+    """Combine certbot fullchain.pem and privkey.pem into a single text."""
+
+    result = ""
+
+    for file in ["fullchain.pem", "privkey.pem"]:
+        with open(f"/etc/letsencrypt/live/{domain_name}/{file}", "r") as f:
+            result += f.read()
+
+    return result
+
+def main() -> None:
+    """Main function."""
+
+    haproxy = HaproxyClient()
+
+    cert_name = f"{HAPROXY_CERTS_PATH}/{MIRROR_DOMAIN}_{int(time.time())}"
+    combined_cert = combine_certs(MIRROR_DOMAIN)
+
+    haproxy.add_cert(cert_name, combined_cert)
+    haproxy.add_cert_to_list(HAPROXY_CRT_LIST, cert_name, MIRROR_DOMAIN)
+
+    for cert in haproxy.get_certs():
+        if cert.startswith(f"{HAPROXY_CERTS_PATH}/{MIRROR_DOMAIN}") and cert != cert_name:
+            haproxy.del_cert_from_list(HAPROXY_CRT_LIST, cert)
+            haproxy.del_cert(cert)
+
+    print("Done!")
+
+
+if __name__ == "__main__":
+    main()
