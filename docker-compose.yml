@@ -3,6 +3,9 @@
 
 name: mirror-docker
 
+x-common-env: &common-env
+  MIRROR_DOMAIN: ${MIRROR_DOMAIN:?MIRROR_DOMAIN is required}
+
 services:
   haproxy:
     image: haproxy:latest
@@ -13,18 +16,20 @@ services:
       - "443:443"
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt
-      - ./haproxy.pem:/etc/letsencrypt/dummy.pem:ro
       - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-      - ./crts:/usr/local/etc/haproxy/crts:ro
+      - "./crts:/usr/local/etc/haproxy/crts/$MIRROR_DOMAIN:ro"
     environment:
-      MIRROR_DOMAIN: ${MIRROR_DOMAIN}
+      <<: *common-env
   certbot:
     container_name: ${COMPOSE_PROJECT_NAME}-certbot
-    image: ghcr.io/yurzs/certbot/certbot:haproxy
+    image: ghcr.io/yurzs/certbot:haproxy
+    pull_policy: always
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt
-      - ./crts:/usr/local/etc/haproxy/crts
+      - /etc/letsencrypt/renewal-hooks/post/
+      - "./crts:/usr/local/etc/haproxy/crts/$MIRROR_DOMAIN"
     ports:
       - "80:80"
-
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    environment:
+      <<: *common-env
+    command: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
