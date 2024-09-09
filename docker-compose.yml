@@ -9,27 +9,34 @@ x-common-env: &common-env
 services:
   haproxy:
     image: haproxy:latest
+    hostname: ${MIRROR_DOMAIN}
     container_name: ${COMPOSE_PROJECT_NAME}-haproxy
     restart: on-failure
     user: root
-    ports:
-      - "443:443"
     volumes:
-      - /etc/letsencrypt:/etc/letsencrypt
-      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-      - "./crts:/usr/local/etc/haproxy/crts/$MIRROR_DOMAIN:ro"
+      - $PWD/letsencrypt:/etc/letsencrypt
+      - $PWD/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - $PWD/crts:/usr/local/etc/haproxy/crts/
+# Uncomment if not running multiple container services on the same ports.
+#   ports:
+#     - "443:443"
+#     - "80:80"
     environment:
       <<: *common-env
   certbot:
     container_name: ${COMPOSE_PROJECT_NAME}-certbot
+    hostname: ${MIRROR_DOMAIN}
     image: ghcr.io/yurzs/certbot:haproxy
     pull_policy: always
     volumes:
-      - /etc/letsencrypt:/etc/letsencrypt
+      - $PWD/letsencrypt:/etc/letsencrypt
       - /etc/letsencrypt/renewal-hooks/post/
-      - "./crts:/usr/local/etc/haproxy/crts/$MIRROR_DOMAIN"
-    ports:
-      - "80:80"
+      - $PWD/crts:/usr/local/etc/haproxy/crts/
     environment:
       <<: *common-env
     command: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+networks:
+  haproxy-cluster:
+    name: haproxy-cluster
+    driver: bridge
