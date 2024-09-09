@@ -40,3 +40,4 @@ networks:
   haproxy-cluster:
     name: haproxy-cluster
     driver: bridge
+    external: true
